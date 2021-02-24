@@ -14,25 +14,40 @@ const $searchForm = $("#searchForm");
 
 async function getShowsByTerm( /* term */) {
   // ADD: Remove placeholder & make request to TVMaze search shows API.
+  let $searchTerm = $("#searchForm-term").val();
 
-  return [
-    {
-      id: 1767,
-      name: "The Bletchley Circle",
-      summary:
-        `<p><b>The Bletchley Circle</b> follows the journey of four ordinary 
-           women with extraordinary skills that helped to end World War II.</p>
-         <p>Set in 1952, Susan, Millie, Lucy and Jean have returned to their 
-           normal lives, modestly setting aside the part they played in 
-           producing crucial intelligence, which helped the Allies to victory 
-           and shortened the war. When Susan discovers a hidden code behind an
-           unsolved murder she is met by skepticism from the police. She 
-           quickly realises she can only begin to crack the murders and bring
-           the culprit to justice with her former friends.</p>`,
-      image:
-          "http://static.tvmaze.com/uploads/images/medium_portrait/147/369403.jpg"
+  let searchResult = await axios.get(`http://api.tvmaze.com/search/shows?q=${$searchTerm}`);
+  let show = searchResult.data[0].show;
+
+  console.log(searchResult);
+
+  if (show.image === null){
+      show.image = {medium: "https://store-images.s-microsoft.com/image/apps.65316.13510798887490672.6e1ebb25-96c8-4504-b714-1f7cbca3c5ad.f9514a23-1eb8-4916-a18e-99b1a9817d15?mode=scale&q=90&h=300&w=300"};
     }
-  ]
+
+  return [{id: show.id,
+           name: show.name,
+           summary: show.summary,
+           image: show.image.medium}];
+
+  // return [
+  //   {
+  //     id: 1767,
+  //     name: "The Bletchley Circle",
+  //     summary:
+  //       `<p><b>The Bletchley Circle</b> follows the journey of four ordinary 
+  //          women with extraordinary skills that helped to end World War II.</p>
+  //        <p>Set in 1952, Susan, Millie, Lucy and Jean have returned to their 
+  //          normal lives, modestly setting aside the part they played in 
+  //          producing crucial intelligence, which helped the Allies to victory 
+  //          and shortened the war. When Susan discovers a hidden code behind an
+  //          unsolved murder she is met by skepticism from the police. She 
+  //          quickly realises she can only begin to crack the murders and bring
+  //          the culprit to justice with her former friends.</p>`,
+  //     image:
+  //         "http://static.tvmaze.com/uploads/images/medium_portrait/147/369403.jpg"
+  //   }
+  // ]
 }
 
 
@@ -42,11 +57,15 @@ function populateShows(shows) {
   $showsList.empty();
 
   for (let show of shows) {
+    
+
+    console.log(show);
+
     const $show = $(
         `<div data-show-id="${show.id}" class="Show col-md-12 col-lg-6 mb-4">
          <div class="media">
            <img 
-              src="http://static.tvmaze.com/uploads/images/medium_portrait/160/401704.jpg" 
+              src=${show.image} 
               alt="Bletchly Circle San Francisco" 
               class="w-25 mr-3">
            <div class="media-body">
