@@ -4,7 +4,7 @@ const $showsList = $("#showsList");
 const $episodesArea = $("#episodesArea");
 const $searchForm = $("#searchForm");
 const defaultImg = {medium: "https://store-images.s-microsoft.com/image/apps.65316.13510798887490672.6e1ebb25-96c8-4504-b714-1f7cbca3c5ad.f9514a23-1eb8-4916-a18e-99b1a9817d15?mode=scale&q=90&h=300&w=300"};
-let $episodesBtn;
+let $episodesBtns;
 
 
 /** Given a search term, search for tv shows that match that query.
@@ -19,20 +19,25 @@ async function getShowsByTerm( /* term */) {
   let $searchTerm = $("#searchForm-term").val();
 
   let searchResult = await axios.get(`http://api.tvmaze.com/search/shows?q=${$searchTerm}`);
+  
   if (searchResult.data.length > 0){
     
-    let show = searchResult.data[0].show;
-      
-    console.log(searchResult);
+    let shows = searchResult.data;
+    let showArr = [];
 
-    if (show.image === null){
-        show.image = defaultImg;
+    console.log(searchResult);
+    console.log(shows);
+    for (let show of shows){
+      if (show.show.image === null){
+        show.show.image = defaultImg;
       }
 
-    return [{id: show.id,
-            name: show.name,
-            summary: show.summary,
-            image: show.image.medium}];
+      showArr.push({id: show.show.id,
+            name: show.show.name,
+            summary: show.show.summary,
+            image: show.show.image.medium});
+     }
+     return showArr; 
   }
 }
 
@@ -69,7 +74,7 @@ function populateShows(shows) {
       $showsList.append($show);  }
   }
 
-  $episodesBtn = $(".Show-getEpisodes");
+  $episodesBtns = $(".Show-getEpisodes");
   
 }
 
@@ -86,7 +91,12 @@ async function searchForShowAndDisplay() {
   $episodesArea.hide();
   populateShows(shows);
   
-  $episodesBtn.on("click", ()=>getEpisodesOfShow(shows[0].id));
+
+  $episodesBtns.on("click", async (evt) => {
+    let showID = $(evt.target).closest("div.Show").data("show-id");
+    let episodeSearch = await getEpisodesOfShow(showID);
+    populateEpisodes(episodeSearch);
+  })
 }
 
 $searchForm.on("submit", async function (evt) {
@@ -102,12 +112,15 @@ $searchForm.on("submit", async function (evt) {
 
  async function getEpisodesOfShow(id) {
   let searchResult = await axios.get(`http://api.tvmaze.com/shows/${id}/episodes`);
-  console.log(searchResult.data);
   return searchResult.data;
-  }
+}
 
-/** Write a clear docstring for this function... */
+/** Appends episode list from show ID and makes it visible*/
 
- function populateEpisodes(episodes) {
-  
+ function populateEpisodes(episodes) { 
+  $("#episodesList").empty();
+  $("#episodesArea").css("display", "block");
+  for(let episode of episodes){
+     $("#episodesList").append($(`<li>${episode.name} (season ${episode.season}, number ${episode.number})</li>`));
+  }  
  }
